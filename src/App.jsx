@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { auth, db, storage } from "./firebase"; 
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
   onAuthStateChanged,
-  updateProfile 
+  updateProfile,
+sendEmailVerification,
+reload
 } from "firebase/auth";
 import { 
   collection, 
@@ -112,7 +114,11 @@ const [selectedImage, setSelectedImage] = useState(null);
 
     try {
       const res = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(res.user, { displayName: fullName.trim() });
+await updateProfile(res.user, { displayName: fullName.trim() });
+await sendEmailVerification(res.user, {
+  url: "https://sage-unikart.vercel.app",
+  handleCodeInApp: false
+});
       await setDoc(doc(db, "users", res.user.uid), {
         uid: res.user.uid,
         name: fullName.trim(),
@@ -134,7 +140,18 @@ const [selectedImage, setSelectedImage] = useState(null);
       alert(err.message);
     }
   };
+  const checkEmailVerification = async () => {
+    if (!auth.currentUser) return;
 
+    await reload(auth.currentUser);
+
+    if (auth.currentUser.emailVerified) {
+      alert("Email verified successfully! Welcome to sage-uniKart.");
+      setUser(auth.currentUser);
+    } else {
+      alert("Your email is not verified yet. Please check your inbox.");
+    }
+  };
   const handleSignOut = async () => {
     await signOut(auth);
     setView("home");
@@ -284,39 +301,101 @@ const deleteUserRecord = async (userId, userFullName) => {
                 value={matricNumber} 
                 onChange={(e) => setMatricNumber(e.target.value)} 
                 style={{ width: "100%", padding: "12px", margin: "8px 0", borderRadius: "8px", border: "1px solid #334155", boxSizing: "border-box", color: "#fff", backgroundColor: "#0f172a", fontSize: "1rem" }}
-              />
-              <input 
-                placeholder="WhatsApp Phone (e.g. 080...)" 
-                type="text" 
-                value={whatsappNumber} 
-                onChange={(e) => setWhatsappNumber(e.target.value)} 
+          />
+              <input
+                placeholder="WhatsApp Phone (e.g. 080...)"
+                type="text"
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
                 style={{ width: "100%", padding: "12px", margin: "8px 0", borderRadius: "8px", border: "1px solid #334155", boxSizing: "border-box", color: "#fff", backgroundColor: "#0f172a", fontSize: "1rem" }}
               />
             </>
           )}
 
-          <button onClick={isSignUp ? handleSignUp : handleSignIn} style={{ width: "100%", padding: "14px", marginTop: "15px", background: "#0284c7", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "1rem" }}>
+                    <button
+            onClick={isSignUp ? handleSignUp : handleSignIn}
+            style={{ width: "100%", padding: "14px", marginTop: "15px", background: "#0284c7", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "1rem" }}
+          >
             {isSignUp ? "Register Campus Profile" : "Secure Login"}
           </button>
 
           <p style={{ textAlign: "center", fontSize: "0.9rem", marginTop: "20px", cursor: "pointer", color: "#38bdf8" }} onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp ? "Already have an account? Sign In" : "New vendor? Create profile here"}
           </p>
-        </div>
+                </div>
       </div>
-    );
-  }
+      );
+}
 
-  // --- CORE SYSTEM INTERFACE AREA ---
+if (!user.emailVerified) {
   return (
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", backgroundColor: "#0f172a", padding: "20px" }}>
+      <div style={{ background: "#1e293b", padding: "35px", borderRadius: "16px", boxShadow: "0 10px 25px rgba(0,0,0,0.3)", width: "100%", maxWidth: "400px", color: "#fff", boxSizing: "border-box", textAlign: "center" }}>
+        
+        <div style={{ fontSize: "3rem", marginBottom: "10px" }}>📧</div>
+
+        <h2 style={{ color: "#38bdf8", marginBottom: "10px" }}>
+          Verify Your Email
+        </h2>
+
+        <p style={{ color: "#cbd5e1", lineHeight: "1.6" }}>
+          We've sent a verification link to:
+        </p>
+
+        <p style={{ color: "#fff", fontWeight: "bold", wordBreak: "break-word" }}>
+          {user.email}
+        </p>
+
+        <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: "1.5" }}>
+          Please check your inbox and click the verification link before accessing sage-uniKart.
+        </p>
+
+        <button
+          onClick={checkEmailVerification}
+          style={{ width: "100%", padding: "14px", marginTop: "15px", background: "#0284c7", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "1rem" }}
+        >
+          I've Verified My Email
+        </button>
+
+        <button
+          onClick={async () => {
+            try {
+              await sendEmailVerification(auth.currentUser);
+              alert("Verification email sent again. Please check your inbox.");
+            } catch (err) {
+              alert(err.message);
+            }
+          }}
+          style={{ width: "100%", padding: "12px", marginTop: "10px", background: "transparent", color: "#38bdf8", border: "1px solid #38bdf8", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}
+        >
+          Resend Verification Email
+        </button>
+
+        <button
+          onClick={handleSignOut}
+          style={{ width: "100%", padding: "12px", marginTop: "10px", background: "#334155", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}
+        >
+          Sign Out
+        </button>
+
+      </div>
+    </div>
+  );
+}
+
+// --- CORE SYSTEM INTERFACE AREA ---
+return (
+
     <div style={{ fontFamily: "'Segoe UI', Roboto, sans-serif", backgroundColor: "#0f172a", color: "#f8fafc", minHeight: "100vh", paddingBottom: "60px" }}>
       
       {/* GLOBAL APPLICATION TOP-NAVIGATION HEADER */}
       <div style={{ background: "#1e293b", padding: "15px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.2)", position: "sticky", top: 0, zIndex: 100 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#38bdf8", letterSpacing: "0.5px" }}>sage-uniKart 🛒</h1>
-          <p style={{ margin: "2px 0 0 0", fontSize: "0.75rem", color: "#94a3b8" }}>User: {user.displayName || user.email}</p>
-        </div>
+  <h1 style={{ margin: 0, fontSize: "1.3rem", fontWeight: 800, color: "#38bdf8", letterSpacing: "0.5px" }}>sage-uniKart 🛒</h1>
+  <p style={{ margin: "4px 0 0 0", fontSize: "0.8rem", color: "#94a3b8" }}>
+    Hi, {user.displayName?.trim().split(" ")[0] || "there"} 👋
+  </p>
+</div>
         
         <div style={{ display: "flex", gap: "6px" }}>
           <button onClick={() => setView("home")} style={{ background: view === "home" ? "#38bdf8" : "#334155", color: view === "home" ? "#0f172a" : "#fff", border: "none", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", fontSize: "0.8rem", fontWeight: "bold", transition: "all 0.2s" }}>Home</button>
