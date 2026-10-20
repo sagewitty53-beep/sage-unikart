@@ -6,7 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
-sendEmailVerification,
+sendEmailVerification,sendPasswordResetEmail,
 reload
 } from "firebase/auth";
 import { 
@@ -140,7 +140,18 @@ await sendEmailVerification(res.user, {
       alert(err.message);
     }
   };
-  const checkEmailVerification = async () => {
+const handlePasswordReset = async () => {
+  if (!email.trim()) {
+    return alert("Please enter your email address first.");
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    alert("Password reset email sent. Check your inbox and Spam folder.");
+  } catch (err) {
+    alert("Password reset failed: " + err.message);
+  }
+};  const checkEmailVerification = async () => {
     if (!auth.currentUser) return;
 
     await reload(auth.currentUser);
@@ -317,7 +328,19 @@ const deleteUserRecord = async (userId, userFullName) => {
             style={{ width: "100%", padding: "14px", marginTop: "15px", background: "#0284c7", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "1rem" }}
           >
             {isSignUp ? "Register Campus Profile" : "Secure Login"}
-          </button>
+          </button>{!isSignUp && (
+  <p
+    onClick={handlePasswordReset}
+    style={{
+      textAlign: "center",
+      color: "#38bdf8",
+      cursor: "pointer",
+      marginTop: "12px"
+    }}
+  >
+    Forgot Password?
+  </p>
+)}
 
           <p style={{ textAlign: "center", fontSize: "0.9rem", marginTop: "20px", cursor: "pointer", color: "#38bdf8" }} onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp ? "Already have an account? Sign In" : "New vendor? Create profile here"}
