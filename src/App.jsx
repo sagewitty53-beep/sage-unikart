@@ -241,16 +241,39 @@ isSold: false,
     }
   };
 const deleteUserRecord = async (userId, userFullName) => {
-  if (user.email !== ADMIN_EMAIL) return;
-  if (window.confirm(`CRITICAL WARNING:\nAre you sure you want to permanently delete user profile "${userFullName}" from sage-uniKart database logs?`)) {
-    try {
-      await deleteDoc(doc(db, "users", userId));
-      alert("User profile successfully expunged.");
-      fetchAdminData(); // Refresh the list automatically
-    } catch (err) {
-      alert("Admin execution failure: " + err.message);
-    }
-  }
+if (user.email !== ADMIN_EMAIL) {
+alert("Admin access only.");
+return;
+}
+
+if (!window.confirm("WARNING: Permanently terminate ${userFullName}'s account? This cannot be undone.")) {
+return;
+}
+
+try {
+const idToken = await user.getIdToken();
+
+const response = await fetch("/api/terminate-user", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${idToken}`
+  },
+  body: JSON.stringify({ userId })
+});
+
+const result = await response.json();
+
+if (!response.ok) {
+  throw new Error(result.error || "Account termination failed.");
+}
+
+alert("User account terminated successfully.");
+await fetchAdminData();
+
+} catch (err) {
+alert("Termination failed: " + err.message);
+}
 };
 
   const toggleWishlist = (id) => {
