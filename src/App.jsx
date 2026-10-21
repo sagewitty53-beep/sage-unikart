@@ -452,16 +452,17 @@ return (
                   <div key={u.id} style={{ padding: "12px 0", borderBottom: "1px solid #334155", fontSize: "0.85rem" }}>
                     <div style={{ fontWeight: "bold", color: "#f8fafc" }}>{u.name}</div>
                     <div style={{ color: "#94a3b8", marginTop: "3px" }}>Email: {u.email} | Matric: {u.matricNumber}</div>
-                    <div style={{ color: "#38bdf8", marginTop: "2px" }}>WhatsApp Connection Base: +{u.whatsapp}</div>
+                    <div style={{ color: "#38bdf8", marginTop: "2px" }}>WhatsApp Connection Base: +{u.whatsapp}</div> 
+<button
+onClick={() => deleteUserRecord(u.id, u.name)}
+style={{ background: "#ef4444", color: "white", border: "none", padding: "4px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "bold", marginTop: "8px" }}
+>
+Terminate Account
+</button>
                   </div>
                 ))
               )}
-            </div><button 
-  onClick={() => deleteUserRecord(u.id, u.name)}
-  style={{ background: "#ef4444", color: "white", border: "none", padding: "4px 10px", borderRadius: "6px", cursor: "pointer", fontSize: "0.75rem", fontWeight: "bold", marginTop: "8px" }}
->
-  Terminate Account
-</button>
+            </div>
 
           </div>
         ) : view === "about" ? (
